@@ -1,51 +1,62 @@
-# Makemore — Character-Level Language Models
+# makemore — Character-Level Language Modeling Toolkit
 
-A series of character-level language models for name generation, implemented in
-PyTorch following Andrej Karpathy's "Building makemore" tutorial series.
+A from-scratch PyTorch toolkit for training and sampling character-level language models, progressing from bigram counting to MLPs with learned embeddings. Built to understand autoregressive sequence modeling at the implementation level.
 
-Re-implemented from a working understanding of language modeling fundamentals
-(not copy-paste) to solidify my knowledge of how autoregressive models work
-from bigrams up to MLPs.
+## Overview
 
-## Contents
+This project implements a complete training and inference pipeline for name generation models, with modular components for data handling, model architectures, training loops, and controllable sampling.
 
-- `Bigram.ipynb` — Bigram character-level model (counting + neural net approach)
-- `MLP.ipynb` — MLP with character embeddings, trained on name data
-- `MLP3.ipynb` — Extended MLP experiments (WIP)
-- `names.txt` — Training dataset (32K names)
-- `makemore.py` — Refactored model classes, training loop, and sampling utilities
-- `test_makemore.py` — Tests for the models and training pipeline
+## What's Implemented
 
-## What the project covers
+### Data Pipeline
+- Vocabulary construction from raw text corpora
+- Sliding-window dataset building with configurable context lengths
+- Deterministic train/validation/test splits
 
-- Bigram language model via explicit counting and normalization
-- Bigram model as a single-layer neural network with softmax
-- Character embeddings learned jointly with the model
-- MLP architecture: embedding → hidden layer (tanh) → output softmax
-- Train/validation/test split for proper evaluation
-- Mini-batch SGD with learning rate tuning
-- Name generation via autoregressive sampling from the trained model
-- Refactored `MakemoreModel` class with configurable architecture
-- Training loop with loss tracking, learning rate scheduling, and early stopping
-- Top-k and temperature-based sampling for controllable generation
+### Model Architectures
+- **BigramModel**: Single-layer neural net formulation of bigram counting, trained with gradient descent instead of explicit frequency tables
+- **MakemoreModel**: MLP with learned character embeddings, hidden tanh layer, and output softmax; supports configurable embedding dimensions, hidden size, and context window
 
-## What I learned
+### Training Infrastructure
+- `Trainer` class with mini-batch SGD, learning rate scheduling, and early stopping
+- Cosine learning rate decay with linear warmup
+- Train/validation loss tracking and logging
+- Deterministic seeding for reproducibility
 
-- How bigram models bridge counting and gradient-based approaches
-- Why embeddings let the model share statistical strength across similar characters
-- The role of the hidden layer in capturing character interactions beyond bigrams
-- How mini-batching stabilizes gradient estimates and speeds up training
-- Why train/val/test splits matter even for generative models
-- How temperature and top-k sampling trade diversity vs. quality in generation
+### Sampling & Generation
+- Autoregressive character-by-character generation
+- Temperature-based sampling for diversity control
+- Top-k filtering for quality/concentration tradeoff
+- Deterministic sampling for reproducible outputs
 
-## Next steps
+### Testing
+Full pytest suite covering data utilities, model forward passes, gradient flow, training convergence, validation splitting, early stopping, and sampling determinism.
 
-- [ ] Add BatchNorm layer for more stable training
-- [ ] Implement Wavenet-style residual connections
-- [ ] Add a learning rate finder utility
+## Quick Start
 
-## Credits
+```bash
+pip install torch pytest
+python makemore.py
+```
 
-Based on [Andrej Karpathy's makemore tutorial](https://www.youtube.com/watch?v=PaCmpygF5o0)
-and his [original implementation](https://github.com/karpathy/makemore). All educational
-credit to him.
+This trains an MLP on the included 32,000-name dataset and samples names with temperature and top-k filtering.
+
+## Project Structure
+
+| File | Description |
+|------|-------------|
+| `makemore.py` | Core library: data utils, model classes, trainer, sampling |
+| `test_makemore.py` | pytest suite for all components |
+| `Bigram.ipynb` | Bigram model exploration (counting + neural net) |
+| `MLP.ipynb` | MLP with embeddings: training, evaluation, generation |
+| `names.txt` | Training corpus: 32K names |
+
+## Key Design Decisions
+
+- **Modular architecture**: `MakemoreModel`, `BigramModel`, `Trainer`, and `sample()` are decoupled so any model can be trained with the same trainer and sampled with the same generator
+- **Configurable generation**: Temperature and top-k are passed at inference time, not hardcoded, making it easy to experiment with output quality
+- **Testable training**: The `Trainer` class exposes `train_losses` and `val_losses` arrays so experiments can be validated programmatically
+
+## License
+
+MIT
